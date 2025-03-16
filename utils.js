@@ -46,10 +46,10 @@ function updateEnv(variable, value) {
       console.log("Không thể đọc file .env:", err);
       return;
     }
-    console.log(value, variable);
+
     // Tạo hoặc cập nhật biến trong file
     const regex = new RegExp(`^${variable}=.*`, "m");
-    const newData = data.replace(regex, `${variable}=${value}`);
+    let newData = data.replace(regex, `${variable}=${value}`); // Sử dụng let thay vì const
 
     // Kiểm tra nếu biến không tồn tại trong file, thêm vào cuối
     if (!regex.test(data)) {
@@ -61,7 +61,7 @@ function updateEnv(variable, value) {
       if (err) {
         console.error("Không thể ghi file .env:", err);
       } else {
-        console.log(`Đã cập nhật ${variable} thành ${value}`);
+        // console.log(`Đã cập nhật ${variable} thành ${value}`);
       }
     });
   });
@@ -209,6 +209,12 @@ function generateComplexId(length = 9) {
   return result;
 }
 
+function getRandomNineDigitNumber() {
+  const min = 100000000; // Số 9 chữ số nhỏ nhất
+  const max = 999999999; // Số 9 chữ số lớn nhất
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function decodeJWT(token) {
   const [header, payload, signature] = token.split(".");
 
@@ -247,4 +253,5 @@ module.exports = {
   getOrCreateJSON,
   sleep,
   parseQueryString,
+  getRandomNineDigitNumber,
 };

@@ -5,7 +5,7 @@ const colors = require("colors");
 const readline = require("readline");
 const user_agents = require("./config/userAgents");
 const settings = require("./config/config");
-const { sleep, loadData, saveToken, isTokenExpired, saveJson, parseQueryString, decodeJWT } = require("./utils");
+const { sleep, loadData, saveToken, isTokenExpired, saveJson, parseQueryString, decodeJWT, getRandomNineDigitNumber, updateEnv } = require("./utils");
 const { checkBaseUrl } = require("./checkAPI");
 // const FormData = require("form-data");
 
@@ -134,7 +134,8 @@ class ClientAPI {
           timeout: 30000,
         });
         success = true;
-        return { success: true, data: response.data.result };
+        if (response.data.result) return { success: true, data: response.data.result };
+        else return { success: false, data: response.data, error: response.data.error };
       } catch (error) {
         this.log(`Yêu cầu thất bại: ${url} | ${error.message} | đang thử lại...`, "warning");
         success = false;
@@ -142,7 +143,7 @@ class ClientAPI {
         if (currRetries == retries) return { success: false, error: error.message };
       }
       currRetries++;
-    } while (currRetries < retries && !success);
+    } while (currRetries <= retries && !success);
   }
 
   async auth() {
@@ -200,7 +201,7 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_myPoint",
       params: [],
-      id: 896770937,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -227,7 +228,7 @@ class ClientAPI {
           ],
         },
       ],
-      id: 896770937,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -236,7 +237,7 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_getFarmInfo",
       params: [],
-      id: 78611763,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -245,7 +246,7 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_claimFarm",
       params: [groupid, id, ""],
-      id: 542792293,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -254,7 +255,7 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_startFarm",
       params: [groupid, id],
-      id: 377602545,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -263,25 +264,25 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_myPoint",
       params: [],
-      id: 565051978,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
 
   async getTasks() {
     return this.makeRequest(`${this.baseURL}`, "post", {
-      method: "wallet_adsList2",
+      method: "wallet_taskList",
       params: [false],
-      id: 649710614,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
 
-  async completeTask(id) {
+  async completeTask(id, groupId) {
     return this.makeRequest(`${this.baseURL}`, "post", {
-      method: "wallet_adsClick",
-      params: [id],
-      id: 297490398,
+      method: "wallet_taskClick",
+      params: groupId ? [id, groupId, ""] : [id, ""],
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -290,16 +291,79 @@ class ClientAPI {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_taskList",
       params: [false],
-      id: 179679312,
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
 
-  async claimTask(id) {
+  async claimTask(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_taskClick",
+      params: groupId ? [id, groupId, ""] : [id, ""],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async getAds() {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_adsList3",
+      params: [false],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async clickAds(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_adsClick",
+      params: groupId ? [groupId, id] : [id],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async adsState(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_adsState",
+      params: groupId ? [groupId, id] : [id],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async claimAd(id, groupId) {
     return this.makeRequest(`${this.baseURL}`, "post", {
       method: "wallet_adsClaim",
-      params: [id, ""],
-      id: 432482742,
+      params: [id, groupId],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async setTaskCompletionStatus(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_setTaskCompletionStatus",
+      params: [id, groupId],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async checkAdsState(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_taskState",
+      params: groupId ? [groupId, id] : [id],
+      id: getRandomNineDigitNumber(),
+      jsonrpc: "2.0",
+    });
+  }
+
+  async claimVideoAD(id, groupId) {
+    return this.makeRequest(`${this.baseURL}`, "post", {
+      method: "wallet_claimVideoAD",
+      params: [groupId, id],
+      id: getRandomNineDigitNumber(),
       jsonrpc: "2.0",
     });
   }
@@ -332,33 +396,51 @@ class ClientAPI {
     return null;
   }
 
-  async handleTasks() {
-    const resTasks = await this.getTasks();
+  async handleTasks(retries = 1) {
+    let currRetries = retries;
+    const resTasks = await this.getAds();
     if (resTasks.success) {
       let tasks = resTasks.data?.items || [];
-      tasks.filter((t) => !t.finished && !settings.SKIP_TASKS.includes(t.id));
+      tasks = tasks.filter((t) => !t.rewarded && !settings.SKIP_TASKS.includes(t.id));
       if (tasks.length == 0) {
-        this.log("No tasks to do", "warning");
+        this.log("No task to do", "warning");
       } else {
         for (const task of tasks) {
           await sleep(2);
           if (!task.clicked) {
-            this.log(`Completing task ${task.id} | ${task.name} ...`);
-            await this.completeTask(task.id);
+            this.log(`Trying completing task ${task.id} | ${task.name} ...`);
+            await this.clickAds(task.id, task.groupId);
+            await this.adsState(task.id, task.groupId);
             await sleep(2);
           }
-          const resClaim = await this.claimTask(task.id);
-          if (resClaim.success) {
-            if (!resClaim.data?.clicked) {
-              this.log(`Verify task ${task.id} | ${task.name} sucessfully!`, "success");
+
+          if (task.finished) {
+            const resClaim = await this.claimAd(task.id, task.groupId);
+            if (resClaim.success) {
+              if (!resClaim.data?.clicked && retries > 0) {
+                this.log(`Trying verify task ${task.id} | ${task.name}...`);
+              } else {
+                this.log(`Claim task ${task.id} | ${task.name} sucessfully! | Reward: ${task.awardAmount || task.awards[0].amount}`, "success");
+
+                this.log(`Trying claim video ads for task ${task.id} | ${task.name} | Waiting 30s...`);
+                await sleep(30);
+                const resClaimVideo = await this.claimVideoAD(task.id, task.groupId);
+                if (resClaimVideo.success) {
+                  this.log(`Claim video ads for task ${task.id} | ${task.name} sucessfully! | Reward: ${resClaimVideo.data[0]?.amount || JSON.stringify(resClaimVideo.data)}`, "success");
+                } else {
+                  this.log(`Claim video ads for task ${task.id} | ${task.name} failed: ${resClaimVideo.error.message}`, "warning");
+                }
+              }
             } else {
-              this.log(`Claim task ${task.id} | ${task.name} sucessfully! | Reward: ${task.awardAmount}`, "success");
+              this.log(`Claim task ${task.id} | ${task.name} failed: ${resClaim.error.message} | Task maybe need completed manually!`, "warning");
             }
-          } else {
-            this.log(`Claim task ${task.id} | ${task.name} failed!`, "warning");
           }
         }
       }
+    }
+    if (currRetries > 0) {
+      currRetries--;
+      return await this.handleTasks(currRetries);
     }
   }
 
@@ -408,7 +490,6 @@ class ClientAPI {
     }
     const data = await this.getWalletRegister();
     const farmInfo = await this.getFarmInfo();
-
     if (!data?.data?.alias || !farmInfo?.data?.token) {
       return this.log("Không thể lấy thông tin user...bỏ qua", "warning");
     }
